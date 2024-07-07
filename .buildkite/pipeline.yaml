@@ -1,11 +1,12 @@
 # vim: filetype=yaml
 steps:
   - name: ":chopsticks: Test"
-    command: "./smoke -vv"
+    command: "go get github.com/chakrit/smoke@v0.2.3 && ./smoke -vv"
     key: test
   - name: ":wrench: Build"
     command: "docker build -t masqer-$BUILDKITE_COMMIT ."
     key: build
+    depends_on: test
   - name: ":paperclip: Tag"
     command: "docker tag masqer-$BUILDKITE_COMMIT ghcr.io/prod9/masqer"
     key: tag
