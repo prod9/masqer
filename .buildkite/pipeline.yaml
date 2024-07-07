@@ -1,0 +1,14 @@
+# vim: filetype=yaml
+steps:
+  - name: ":wrench: Build"
+    command: "docker build -t masqer ."
+    key: build
+
+  - name: ":paperclip: Tag"
+    command: "docker tag masqer ghcr.io/prod9/masqer"
+    key: tag
+    depends_on: build
+
+  - name: ":rocket: Publish"
+    command: "docker push ghcr.io/prod9/masqer"
+    depends_on: tag
