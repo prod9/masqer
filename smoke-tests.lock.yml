@@ -22,6 +22,11 @@
         - name: exitcode
           data:
             - "0"
+    - command: docker run --quiet --rm --network masqer-tests -e 'RESOLVER=masqer'                          --name masqer2 -d masqer
+      checks:
+        - name: exitcode
+          data:
+            - "0"
     - command: sleep 3
       checks:
         - name: exitcode
@@ -29,7 +34,15 @@
             - "0"
 - name: smoke-tests.yml \ Docker tests \ Test
   commands:
-    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer dns.example.com | grep '^dns.example.com'
+    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer  dns.example.com | grep '^dns.example.com'
+      checks:
+        - name: stdout
+          data:
+            - "dns.example.com.\t0\tIN\tA\t192.168.1.99"
+        - name: exitcode
+          data:
+            - "0"
+    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer2 dns.example.com | grep '^dns.example.com'
       checks:
         - name: stdout
           data:
@@ -40,6 +53,11 @@
 - name: smoke-tests.yml \ Docker tests \ Cleanup
   commands:
     - command: docker kill masqer
+      checks:
+        - name: exitcode
+          data:
+            - "0"
+    - command: docker kill masqer2
       checks:
         - name: exitcode
           data:

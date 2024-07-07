@@ -30,8 +30,9 @@ $ docker run --rm --name masqer \
 Things to note:
 
 * Put stuff in `EXTRA_HOSTS` env var which you would normally put in `/etc/hosts`
+* Sets `RESOLVER=your.custom.dns` to override upstream DNS
 * It starts `dnsmasq` with a few flags to make it runs in the foreground and logs to the
-  console.
+  console
 
 ### DEV/TEST
 

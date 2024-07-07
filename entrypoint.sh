@@ -1,6 +1,7 @@
 #!/bin/sh
 
 MASQ=/usr/sbin/dnsmasq
+MASQ_OPTS=""
 
 if [ ! -x "$MASQ" ]
 then
@@ -8,15 +9,19 @@ then
 	exit 1
 fi
 
-if [ -z "$EXTRA_HOSTS" ]
+if [ ! -z "$EXTRA_HOSTS" ]
 then
-	echo EXTRA_HOSTS is empty, is this intended? >&2
-	echo running without any additional hosts configuration. >&2
+	echo "Creating /addn_hosts" >&2
+	echo -e "$EXTRA_HOSTS" > /addn_hosts
+	echo "192.168.1.99 masqertest.stage9.dev" >> /addn_hosts
+	MASQ_OPTS="${MASQ_OPTS} --addn-hosts=/addn_hosts"
 fi
 
-echo "Creating /addn_hosts" >&2
-echo -e "$EXTRA_HOSTS" > /addn_hosts
-echo "192.168.1.99 masqertest.stage9.dev" >> /addn_hosts
+if [ ! -z "$RESOLVER" ]
+then
+	echo "Ignoring system resolver and use $RESOLVER instead"
+	MASQ_OPTS="${MASQ_OPTS} --no-resolv --server=$RESOLVER"
+fi
 
 echo "Starting dnsmasq" >&2
 
@@ -27,5 +32,5 @@ set -o xtrace
 	--keep-in-foreground \
 	--log-queries \
 	--log-facility=- \
-	--addn-hosts=/addn_hosts
+	${MASQ_OPTS}
 
