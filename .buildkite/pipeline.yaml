@@ -1,7 +1,7 @@
 # vim: filetype=yaml
 steps:
   - name: ":chopsticks: Test"
-    command: "go get github.com/chakrit/smoke@v0.2.3 && ./smoke -vv"
+    command: "go install github.com/chakrit/smoke@v0.2.3 && ./smoke -vv"
     key: test
   - name: ":wrench: Build"
     command: "docker build -t masqer-$BUILDKITE_COMMIT ."
