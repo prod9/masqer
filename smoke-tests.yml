@@ -1,0 +1,32 @@
+---
+config:
+  interpreter: /bin/sh
+  timeout: 1m
+tests:
+  - name: Docker builds
+    checks:
+      - exitcode
+    commands:
+      - docker build --quiet -t masqer .
+  - name: Docker tests
+    tests:
+      - name: Prepare
+        checks:
+          - exitcode
+        commands:
+          - docker pull --quiet alpine:3.20
+          - docker network create masqer-tests || true
+          - docker run --quiet --rm --network masqer-tests -e 'EXTRA_HOSTS=192.168.1.99 dns.example.com' --name masqer -d masqer
+          - sleep 3
+      - name: Test
+        checks:
+          - stdout
+          - exitcode
+        commands:
+          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer dns.example.com | grep '^dns.example.com'
+      - name: Cleanup
+        checks:
+          - exitcode
+        commands:
+          - docker kill masqer
+          - docker network rm masqer-tests

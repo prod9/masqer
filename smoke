@@ -1,0 +1,17 @@
+#!/bin/sh
+# vim: filetype=sh
+
+set -o errexit
+set -o xtrace
+
+if [ ! -x smoke ]
+then
+	echo `smoke` test not found.
+	echo
+	echo please visit github.com/chakrit/smoke or run:
+	echo
+	echo go get -v github.com/chakrit/smoke@v0.2.3
+	exit 1
+fi
+
+smoke "$@" smoke-tests.yml

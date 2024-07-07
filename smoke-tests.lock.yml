@@ -1,0 +1,51 @@
+- name: smoke-tests.yml \ Docker builds
+  commands:
+    - command: docker build --quiet -t masqer .
+      checks:
+        - name: exitcode
+          data:
+            - "0"
+- name: smoke-tests.yml \ Docker tests \ Prepare
+  commands:
+    - command: docker pull --quiet alpine:3.20
+      checks:
+        - name: exitcode
+          data:
+            - "0"
+    - command: docker network create masqer-tests || true
+      checks:
+        - name: exitcode
+          data:
+            - "0"
+    - command: docker run --quiet --rm --network masqer-tests -e 'EXTRA_HOSTS=192.168.1.99 dns.example.com' --name masqer -d masqer
+      checks:
+        - name: exitcode
+          data:
+            - "0"
+    - command: sleep 3
+      checks:
+        - name: exitcode
+          data:
+            - "0"
+- name: smoke-tests.yml \ Docker tests \ Test
+  commands:
+    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer dns.example.com | grep '^dns.example.com'
+      checks:
+        - name: stdout
+          data:
+            - "dns.example.com.\t0\tIN\tA\t192.168.1.99"
+        - name: exitcode
+          data:
+            - "0"
+- name: smoke-tests.yml \ Docker tests \ Cleanup
+  commands:
+    - command: docker kill masqer
+      checks:
+        - name: exitcode
+          data:
+            - "0"
+    - command: docker network rm masqer-tests
+      checks:
+        - name: exitcode
+          data:
+            - "0"
