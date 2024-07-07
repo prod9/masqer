@@ -1,6 +1,6 @@
 # vim: filetype=yaml
 steps:
-  - name: ":chopstick: Test"
+  - name: ":chopsticks: Test"
     command: "./smoke -vv"
     key: test
   - name: ":wrench: Build"
