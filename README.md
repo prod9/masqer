@@ -2,6 +2,21 @@
 
 A teeny tiny wrapping of DNSMASQ to allow deploying it into containerized environments.
 
+### USE CASES
+
+Reasons this was made:
+
+* Emulating `/etc/hosts` for a cluster of pods on Kubernetes
+
+Why?
+
+* You don't want to mess with `/etc/hosts` inside Docker containers which requires dirty
+  hacks to make work.
+* You do not want to run or configure a full blown authoritative DNS server just for a
+  single host
+* You have no access to DNS in a very restrictive network but still want to centralize
+  some IP mappings used in multiple other containers.
+
 ### USAGE
 
 A basic docker run invocation looks like the following:
