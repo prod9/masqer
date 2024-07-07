@@ -1,11 +1,11 @@
 # vim: filetype=yaml
 steps:
   - name: ":wrench: Build"
-    command: "docker build -t masqer ."
+    command: "docker build -t masqer-$BUILDKITE_COMMIT ."
     key: build
 
   - name: ":paperclip: Tag"
-    command: "docker tag masqer ghcr.io/prod9/masqer"
+    command: "docker tag masqer-$BUILDKITE_COMMIT ghcr.io/prod9/masqer"
     key: tag
     depends_on: build
 
