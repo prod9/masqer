@@ -35,7 +35,7 @@ Things to note:
 
 ### DEV/TEST
 
-Some [smoke testing] scripts were provided, run with:
+Some [smoke testing](github.com/chakrit/smoke) scripts were provided, run with:
 
 ```sh
 $ ./smoke -vv
