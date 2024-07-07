@@ -33,5 +33,5 @@ set -o xtrace
 	--keep-in-foreground \
 	--log-queries \
 	--log-facility=- \
-	--listen-address="0.0.0.0" ${MASQ_OPTS}
+	--bind-dynamic ${MASQ_OPTS}
 
