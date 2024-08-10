@@ -17,17 +17,22 @@
         - name: exitcode
           data:
             - "0"
-    - command: docker run --quiet --rm --network masqer-tests -e 'EXTRA_HOSTS=192.168.1.99 dns.example.com' --name masqer -d masqer
+    - command: $RUN -d --name masqer  -e 'EXTRA_HOSTS=192.168.1.99 dns.example.com'        masqer
       checks:
         - name: exitcode
           data:
             - "0"
-    - command: docker run --quiet --rm --network masqer-tests -e 'RESOLVER=masqer'                          --name masqer2 -d masqer
+    - command: $RUN -d --name masqer2 -e 'RESOLVER=masqer'                                 masqer
       checks:
         - name: exitcode
           data:
             - "0"
-    - command: docker run --quiet --rm --network masqer-tests -e 'EXTRA_HOSTS=1.1.1.1 d1.co\n2.2.2.2 d2.co' --name masqer3 -d masqer
+    - command: $RUN -d --name masqer3 -e 'EXTRA_HOSTS=1.1.1.1 d1.co\n2.2.2.2 d2.co'        masqer
+      checks:
+        - name: exitcode
+          data:
+            - "0"
+    - command: $RUN -d --name masqer4 -e 'RESOLVER=masqer3' -e 'EXTRA_HOSTS=3.3.3.3 d3.co' masqer
       checks:
         - name: exitcode
           data:
@@ -37,9 +42,9 @@
         - name: exitcode
           data:
             - "0"
-- name: smoke-tests.yml \ Docker tests \ Test
+- name: smoke-tests.yml \ Docker tests \ Resolve Test
   commands:
-    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer  dns.example.com       | grep '^dns.example.com'
+    - command: $RUN masqer dig @masqer  dns.example.com       | grep '^dns.example.com'
       checks:
         - name: stdout
           data:
@@ -47,15 +52,7 @@
         - name: exitcode
           data:
             - "0"
-    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer2 dns.example.com       | grep '^dns.example.com'
-      checks:
-        - name: stdout
-          data:
-            - "dns.example.com.\t0\tIN\tA\t192.168.1.99"
-        - name: exitcode
-          data:
-            - "0"
-    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer  masqertest.stage9.dev | grep '^masqertest.stage9.dev'
+    - command: $RUN masqer dig @masqer  masqertest.stage9.dev | grep '^masqertest.stage9.dev'
       checks:
         - name: stdout
           data:
@@ -63,15 +60,7 @@
         - name: exitcode
           data:
             - "0"
-    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer2 masqertest.stage9.dev | grep '^masqertest.stage9.dev'
-      checks:
-        - name: stdout
-          data:
-            - "masqertest.stage9.dev.\t0\tIN\tA\t192.168.1.99"
-        - name: exitcode
-          data:
-            - "0"
-    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer3 d1.co                 | grep '^d1.co'
+    - command: $RUN masqer dig @masqer3 d1.co                 | grep '^d1.co'
       checks:
         - name: stdout
           data:
@@ -79,11 +68,53 @@
         - name: exitcode
           data:
             - "0"
-    - command: docker run --quiet --rm --network masqer-tests -t masqer dig @masqer3 d2.co                 | grep '^d2.co'
+    - command: $RUN masqer dig @masqer3 d2.co                 | grep '^d2.co'
       checks:
         - name: stdout
           data:
             - "d2.co.\t\t\t0\tIN\tA\t2.2.2.2"
+        - name: exitcode
+          data:
+            - "0"
+- name: smoke-tests.yml \ Docker tests \ Recursive Resolve Test
+  commands:
+    - command: $RUN masqer dig @masqer2 dns.example.com       | grep '^dns.example.com'
+      checks:
+        - name: stdout
+          data:
+            - "dns.example.com.\t0\tIN\tA\t192.168.1.99"
+        - name: exitcode
+          data:
+            - "0"
+    - command: $RUN masqer dig @masqer2 masqertest.stage9.dev | grep '^masqertest.stage9.dev'
+      checks:
+        - name: stdout
+          data:
+            - "masqertest.stage9.dev.\t0\tIN\tA\t192.168.1.99"
+        - name: exitcode
+          data:
+            - "0"
+    - command: $RUN masqer dig @masqer4 d1.co                 | grep '^d1.co'
+      checks:
+        - name: stdout
+          data:
+            - "d1.co.\t\t\t0\tIN\tA\t1.1.1.1"
+        - name: exitcode
+          data:
+            - "0"
+    - command: $RUN masqer dig @masqer4 d2.co                 | grep '^d2.co'
+      checks:
+        - name: stdout
+          data:
+            - "d2.co.\t\t\t0\tIN\tA\t2.2.2.2"
+        - name: exitcode
+          data:
+            - "0"
+    - command: $RUN masqer dig @masqer4 d3.co                 | grep '^d3.co'
+      checks:
+        - name: stdout
+          data:
+            - "d3.co.\t\t\t0\tIN\tA\t3.3.3.3"
         - name: exitcode
           data:
             - "0"
@@ -100,6 +131,11 @@
           data:
             - "0"
     - command: docker kill masqer3
+      checks:
+        - name: exitcode
+          data:
+            - "0"
+    - command: docker kill masqer4
       checks:
         - name: exitcode
           data:

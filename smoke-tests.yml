@@ -2,6 +2,8 @@
 config:
   interpreter: /bin/sh
   timeout: 1m
+  env:
+    - "RUN=docker run --quiet -t --rm --network masqer-tests"
 tests:
   - name: Docker builds
     checks:
@@ -16,21 +18,30 @@ tests:
         commands:
           - docker pull --quiet alpine:3.20
           - docker network create masqer-tests || true
-          - docker run --quiet --rm --network masqer-tests -e 'EXTRA_HOSTS=192.168.1.99 dns.example.com' --name masqer -d masqer
-          - docker run --quiet --rm --network masqer-tests -e 'RESOLVER=masqer'                          --name masqer2 -d masqer
-          - docker run --quiet --rm --network masqer-tests -e 'EXTRA_HOSTS=1.1.1.1 d1.co\n2.2.2.2 d2.co' --name masqer3 -d masqer
+          - $RUN -d --name masqer  -e 'EXTRA_HOSTS=192.168.1.99 dns.example.com'        masqer
+          - $RUN -d --name masqer2 -e 'RESOLVER=masqer'                                 masqer
+          - $RUN -d --name masqer3 -e 'EXTRA_HOSTS=1.1.1.1 d1.co\n2.2.2.2 d2.co'        masqer
+          - $RUN -d --name masqer4 -e 'RESOLVER=masqer3' -e 'EXTRA_HOSTS=3.3.3.3 d3.co' masqer
           - sleep 3
-      - name: Test
+      - name: Resolve Test
         checks:
           - stdout
           - exitcode
         commands:
-          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer  dns.example.com       | grep '^dns.example.com'
-          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer2 dns.example.com       | grep '^dns.example.com'
-          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer  masqertest.stage9.dev | grep '^masqertest.stage9.dev'
-          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer2 masqertest.stage9.dev | grep '^masqertest.stage9.dev'
-          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer3 d1.co                 | grep '^d1.co'
-          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer3 d2.co                 | grep '^d2.co'
+          - $RUN masqer dig @masqer  dns.example.com       | grep '^dns.example.com'
+          - $RUN masqer dig @masqer  masqertest.stage9.dev | grep '^masqertest.stage9.dev'
+          - $RUN masqer dig @masqer3 d1.co                 | grep '^d1.co'
+          - $RUN masqer dig @masqer3 d2.co                 | grep '^d2.co'
+      - name: Recursive Resolve Test
+        checks:
+          - stdout
+          - exitcode
+        commands:
+          - $RUN masqer dig @masqer2 dns.example.com       | grep '^dns.example.com'
+          - $RUN masqer dig @masqer2 masqertest.stage9.dev | grep '^masqertest.stage9.dev'
+          - $RUN masqer dig @masqer4 d1.co                 | grep '^d1.co'
+          - $RUN masqer dig @masqer4 d2.co                 | grep '^d2.co'
+          - $RUN masqer dig @masqer4 d3.co                 | grep '^d3.co'
       - name: Cleanup
         checks:
           - exitcode
@@ -38,4 +49,5 @@ tests:
           - docker kill masqer
           - docker kill masqer2
           - docker kill masqer3
+          - docker kill masqer4
           - docker network rm masqer-tests
