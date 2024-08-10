@@ -18,18 +18,24 @@ tests:
           - docker network create masqer-tests || true
           - docker run --quiet --rm --network masqer-tests -e 'EXTRA_HOSTS=192.168.1.99 dns.example.com' --name masqer -d masqer
           - docker run --quiet --rm --network masqer-tests -e 'RESOLVER=masqer'                          --name masqer2 -d masqer
+          - docker run --quiet --rm --network masqer-tests -e 'EXTRA_HOSTS=1.1.1.1 d1.co\n2.2.2.2 d2.co' --name masqer3 -d masqer
           - sleep 3
       - name: Test
         checks:
           - stdout
           - exitcode
         commands:
-          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer  dns.example.com | grep '^dns.example.com'
-          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer2 dns.example.com | grep '^dns.example.com'
+          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer  dns.example.com       | grep '^dns.example.com'
+          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer2 dns.example.com       | grep '^dns.example.com'
+          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer  masqertest.stage9.dev | grep '^masqertest.stage9.dev'
+          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer2 masqertest.stage9.dev | grep '^masqertest.stage9.dev'
+          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer3 d1.co                 | grep '^d1.co'
+          - docker run --quiet --rm --network masqer-tests -t masqer dig @masqer3 d2.co                 | grep '^d2.co'
       - name: Cleanup
         checks:
           - exitcode
         commands:
           - docker kill masqer
           - docker kill masqer2
+          - docker kill masqer3
           - docker network rm masqer-tests
